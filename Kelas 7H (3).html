@@ -1,0 +1,659 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kelas 7H</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Hanken+Grotesk:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Konsep: satu kolom yang menyelam. Latar makin gelap ke bawah (penggaris kedalaman 0-30 m di tepi kiri), ikan berenang di hero, tiap murid punya ikan sendiri. Sengaja satu tema: dunia bawah laut. */
+:root {
+  --water-1: #0f7a97;
+  --water-2: #0d6784;
+  --water-3: #0a4a6b;
+  --water-4: #06253c;
+  --bg: #0a4a6b;
+  --fg: #eaf7f8;
+  --muted: #c6e6ec;
+  --line: rgba(234, 247, 248, 0.22);
+  --sand: #ffe6b0;
+  --orange: #ffa04a;
+  --deep: #06253c;
+  --panel: rgba(4, 30, 48, 0.38);
+  --font-display: "Caprasimo", "Cooper Black", Georgia, serif;
+  --font-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  position: relative;
+  background-color: var(--bg);
+  background-image: linear-gradient(180deg, var(--water-1) 0%, var(--water-2) 18%, var(--water-3) 48%, var(--water-4) 100%);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+p { margin: 0; }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+:focus-visible { outline: 3px solid var(--sand); outline-offset: 3px; }
+
+.inner {
+  max-width: 960px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.layer { position: relative; z-index: 1; }
+
+/* penggaris kedalaman */
+.ruler {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 12px; z-index: 2; pointer-events: none;
+  background-image:
+    linear-gradient(to bottom, transparent calc(100% - 1px), rgba(234, 247, 248, 0.5) 0),
+    linear-gradient(to bottom, transparent calc(100% - 2px), rgba(255, 230, 176, 0.95) 0);
+  background-size: 5px 3.3333%, 12px 16.6667%;
+  background-repeat: repeat-y;
+}
+.ruler span { display: none; position: absolute; left: 18px; font: 500 10px var(--font-mono); color: var(--sand); transform: translateY(-50%); }
+.ruler span.last { transform: translateY(-110%); }
+@media (min-width: 1100px) { .ruler span { display: block; } }
+
+/* gelembung */
+.bubbles { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bub {
+  position: absolute; bottom: -40px; border-radius: 50%;
+  border: 1px solid rgba(234, 247, 248, 0.45);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.04) 60%);
+  animation: rise var(--dur) linear var(--delay) infinite;
+}
+@keyframes rise {
+  0% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(var(--dx), -58vh, 0); }
+  100% { transform: translate3d(0, -118vh, 0); }
+}
+
+/* ikan */
+.fish { display: block; width: 100%; height: auto; overflow: visible; }
+.tail { transform-box: fill-box; transform-origin: 100% 50%; animation: wag 0.8s ease-in-out infinite alternate; }
+@keyframes wag { from { transform: rotate(-9deg); } to { transform: rotate(9deg); } }
+
+/* hero */
+.hero { position: relative; overflow: hidden; padding-block: 18px 200px; }
+.hero > .inner { position: relative; z-index: 3; }
+.beam {
+  position: absolute; top: 0; height: 100%; width: 16%; z-index: 0; transform: skewX(-18deg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 85%);
+  animation: pulse 9s ease-in-out infinite alternate;
+}
+@keyframes pulse { from { opacity: 0.45; } to { opacity: 1; } }
+.far, .lane { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none; }
+.far { top: 0; bottom: 0; }
+.lane { bottom: 0; height: 180px; z-index: 2; }
+.sw { position: absolute; left: 0; width: var(--w); animation: swim var(--dur) linear var(--delay) infinite; will-change: transform; }
+.far .sw { top: var(--y); }
+.lane .sw { top: var(--y); }
+@keyframes swim {
+  from { transform: translate3d(-220px, 0, 0); }
+  to { transform: translate3d(calc(100vw + 220px), 0, 0); }
+}
+.bob { animation: bob 3.2s ease-in-out infinite alternate; }
+@keyframes bob { from { transform: translateY(-7px); } to { transform: translateY(7px); } }
+
+nav { display: flex; gap: 22px; overflow-x: auto; scrollbar-width: none; }
+nav::-webkit-scrollbar { display: none; }
+nav a {
+  flex: none; font: 500 12px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--muted); text-decoration: none; padding: 8px 0 6px; border-bottom: 2px solid transparent;
+}
+nav a:hover { color: var(--fg); border-bottom-color: var(--sand); }
+
+.eyebrow { margin-top: 44px; font: 500 12px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--sand); }
+h1 { margin-top: 10px; }
+h1 small { display: block; font-family: var(--font-display); font-size: clamp(1.7rem, 6.5vw, 2.6rem); line-height: 1.1; color: var(--fg); }
+h1 b {
+  display: block; font-family: var(--font-display); font-weight: 400; color: var(--sand);
+  font-size: clamp(6.2rem, 30vw, 12.5rem); line-height: 0.86; letter-spacing: -0.02em;
+  text-shadow: 5px 6px 0 var(--deep);
+}
+.lead { margin-top: 18px; max-width: 36ch; font-size: 1.2rem; line-height: 1.45; }
+.facts { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 26px 0 0; padding-top: 14px; border-top: 1px solid var(--line); max-width: 640px; }
+.facts div { display: flex; flex-direction: column; min-width: 0; }
+.facts dt { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.facts dd { margin: 0; font-weight: 700; }
+
+/* isi */
+main { display: flex; flex-direction: column; gap: 78px; padding-block: 8px 0; }
+.sec-head { margin-bottom: 22px; }
+.depth { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); }
+.sec-head h2 { font-family: var(--font-display); font-size: clamp(2.1rem, 8vw, 3rem); line-height: 1.05; color: var(--sand); margin-top: 4px; }
+.hint { color: var(--muted); font-size: 15px; margin-top: 6px; }
+
+.now { padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.now .label { font: 500 12px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); }
+.now .big { font-family: var(--font-display); font-size: clamp(1.6rem, 6vw, 2.2rem); line-height: 1.15; }
+.now .sub { color: var(--muted); }
+
+/* jadwal */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px 24px; border-bottom: 1px solid var(--line); }
+.tabs button {
+  font: 500 13px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+  background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 0; margin-bottom: -1px; cursor: pointer;
+}
+.tabs button:hover { color: var(--fg); }
+.tabs button[aria-selected="true"] { color: var(--sand); border-bottom-color: var(--orange); }
+.tabs .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--orange); margin-left: 7px; }
+.sched { list-style: none; margin: 0; padding: 0; }
+.sched li { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 0 14px; padding: 14px 10px; border-bottom: 1px solid var(--line); align-items: center; }
+.sched .time { font: 400 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sched .mapel { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sched .mapel .mini { width: 38px; flex: none; }
+.sched .guru { grid-column: 2; color: var(--muted); font-size: 14px; }
+.sched li.break .mapel { font-weight: 500; font-style: italic; color: var(--muted); }
+.sched li.now-row { background: rgba(255, 160, 74, 0.16); }
+.sched li.now-row .time { color: var(--sand); }
+
+/* seragam */
+.uniform { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 24px 20px; }
+.uniform > div { border-top: 3px solid rgba(255, 230, 176, 0.4); padding-top: 10px; display: flex; flex-direction: column; min-width: 0; }
+.uniform > div.today-d { border-top-color: var(--orange); }
+.uniform .d { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.uniform .v { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.15; color: var(--sand); }
+
+/* struktur */
+.org { display: flex; flex-direction: column; align-items: center; }
+.link { width: 2px; height: 24px; background: rgba(255, 230, 176, 0.45); flex: none; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; width: 100%; }
+.node { flex: 0 1 260px; min-width: 0; text-align: center; padding: 10px 18px; border: 1px solid rgba(255, 230, 176, 0.4); border-radius: 3px; background: var(--panel); display: flex; flex-direction: column; }
+.node .role { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.node .nm { font-weight: 700; overflow-wrap: anywhere; }
+.node.top { background: var(--sand); border-color: var(--sand); flex-basis: 320px; }
+.node.top .role { color: var(--deep); opacity: 0.75; }
+.node.top .nm { color: var(--deep); }
+.node.lead { border-color: var(--sand); }
+.seksi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; width: 100%; }
+.seksi-grid .node { flex: none; text-align: left; }
+.seksi-grid .role { color: var(--orange); }
+
+/* piket */
+.piket { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 28px 32px; }
+.piket section { border-top: 3px solid rgba(255, 230, 176, 0.4); padding-top: 10px; min-width: 0; }
+.piket section.today-d { border-top-color: var(--orange); }
+.piket h3 { font-family: var(--font-display); font-size: 1.45rem; color: var(--sand); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.piket h3 small { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); }
+.piket ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.piket li { padding: 7px 0; border-top: 1px solid var(--line); font-weight: 700; overflow-wrap: anywhere; }
+.piket li:first-child { border-top: 0; }
+
+/* tata tertib */
+.grp { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.15; color: var(--sand); margin: 44px 0 14px; }
+.grp:first-of-type { margin-top: 0; }
+.tblwrap { overflow-x: auto; border-top: 3px solid rgba(255, 230, 176, 0.4); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; }
+th { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--orange); text-align: left; padding: 12px 12px 8px 0; vertical-align: bottom; }
+td { padding: 11px 12px 11px 0; border-top: 1px solid var(--line); vertical-align: top; }
+td:first-child { font-weight: 700; color: var(--sand); white-space: nowrap; }
+.rules { margin: 0; border-top: 3px solid rgba(255, 230, 176, 0.4); }
+.rule { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 2px 20px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.rule dt { font-weight: 700; color: var(--sand); }
+.rule dd { margin: 0; }
+.rule dd p + p { margin-top: 3px; color: var(--muted); }
+.pact { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px 40px; }
+.pact li { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 0 14px; align-items: center; font-weight: 700; font-size: 1.1rem; line-height: 1.35; }
+
+/* anggota */
+.search { display: flex; flex-direction: column; gap: 4px; margin-bottom: 26px; }
+.search label { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.search input { font: inherit; width: 100%; max-width: 420px; background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 3px; padding: 10px 14px; }
+.search input::placeholder { color: var(--muted); opacity: 0.8; }
+.members { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 28px 10px; }
+.members li { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; min-width: 0; }
+.members .pic { width: 92px; }
+.members .nm { font-weight: 700; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.members .rl { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--sand); line-height: 1.3; }
+.members li.kosong { grid-column: 1 / -1; align-items: flex-start; text-align: left; color: var(--muted); }
+
+/* dasar laut */
+.foot { position: relative; z-index: 1; margin-top: 70px; min-height: 340px; overflow: hidden; }
+.social { margin-bottom: 26px; }
+.social .ttl { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: var(--sand); }
+.social .links { display: flex; flex-wrap: wrap; gap: 10px 40px; margin-top: 8px; }
+.social a { display: flex; flex-direction: column; color: #ffffff; text-decoration: none; border-bottom: 2px solid transparent; padding-bottom: 2px; }
+.social a:hover { border-bottom-color: #ffffff; }
+.social .p { font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.1em; color: #ffffff; opacity: 0.8; }
+.social .h { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.2; color: #ffffff; overflow-wrap: anywhere; }
+.foot .note { padding-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 24px; justify-content: space-between; font: 400 12px var(--font-mono); color: var(--muted); border-top: 1px solid var(--line); }
+.weeds { position: absolute; left: 0; right: 0; bottom: 24px; height: 140px; pointer-events: none; }
+.weed { position: absolute; bottom: 0; transform-origin: 50% 100%; animation: sway var(--dur) ease-in-out var(--delay) infinite alternate; }
+.weed svg { display: block; width: 100%; height: 100%; overflow: visible; }
+@keyframes sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+.sand { position: absolute; left: -10%; right: -10%; bottom: -40px; height: 74px; background: #e4c887; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+
+@media (max-width: 560px) {
+  .rule { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .sched li { grid-template-columns: 1fr; gap: 2px; }
+  .sched .guru { grid-column: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubbles { display: none; }
+  .sw { animation: none; left: var(--x); }
+  .bob, .tail, .beam, .weed { animation: none; }
+}
+</style>
+
+<div class="ruler" id="ruler" aria-hidden="true"></div>
+<div class="bubbles" id="bubbles" aria-hidden="true"></div>
+
+<header class="hero layer">
+  <div class="beam" style="left: 8%"></div>
+  <div class="beam" style="left: 46%; width: 10%; animation-delay: -4s"></div>
+  <div class="far" id="far" aria-hidden="true"></div>
+  <div class="lane" id="lane" aria-hidden="true"></div>
+  <div class="inner">
+    <nav aria-label="Navigasi halaman">
+      <a href="#jadwal">Jadwal</a>
+      <a href="#seragam">Seragam</a>
+      <a href="#struktur">Struktur</a>
+      <a href="#piket">Piket</a>
+      <a href="#kesepakatan">Tata tertib</a>
+      <a href="#anggota">Anggota</a>
+    </nav>
+    <p class="eyebrow">SMPN 3 Baleendah</p>
+    <h1><small>Kelas </small><b>7H</b></h1>
+    <p class="lead" id="lead">Tempat kami melihat jadwal, piket, dan tata tertib kelas.</p>
+    <dl class="facts">
+      <div><dt>Wali kelas</dt><dd>Ibu Fadila Choirunnisa, S.Pd.</dd><dd>Pa Eki, S.Pd.</dd></div>
+      <div><dt>Ruang</dt><dd>7H &middot; Lapang Belakang</dd></div>
+      <div><dt>Murid</dt><dd id="jumlah">45 siswa</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main class="inner layer">
+  <div class="now" id="today" aria-live="polite"></div>
+
+  <section id="jadwal" aria-labelledby="h-jadwal">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-jadwal">Jadwal pelajaran</h2><p class="hint">Pilih hari. Pelajaran yang sedang jalan ditandai ikan.</p></div>
+    <div class="tabs" role="tablist" id="tabs" aria-label="Hari"></div>
+    <ul class="sched" id="sched"></ul>
+  </section>
+
+  <section id="seragam" aria-labelledby="h-seragam">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-seragam">Daftar baju</h2><p class="hint">Seragam yang dipakai tiap hari.</p></div>
+    <div class="uniform" id="uniform"></div>
+  </section>
+
+  <section id="struktur" aria-labelledby="h-struktur">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-struktur">Struktur kelas</h2><p class="hint">Pengurus kelas 7H.</p></div>
+    <div class="org" id="org"></div>
+  </section>
+
+  <section id="piket" aria-labelledby="h-piket">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-piket">Jadwal piket</h2><p class="hint">Daftar piket per hari.</p></div>
+    <div class="piket" id="piketGrid"></div>
+  </section>
+
+  <section id="kesepakatan" aria-labelledby="h-kesepakatan">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-kesepakatan">Kesepakatan wali kelas dan tata tertib</h2><p class="hint">Kehadiran, kedisiplinan, dan penilaian.</p></div>
+    <h3 class="grp">1. Kehadiran</h3>
+    <div class="tblwrap"><table id="hadir"></table></div>
+    <h3 class="grp">2. Kedisiplinan</h3>
+    <dl class="rules" id="rules"></dl>
+    <h3 class="grp">3. Penilaian dan penugasan</h3>
+    <ul class="pact" id="pact"></ul>
+  </section>
+
+  <section id="anggota" aria-labelledby="h-anggota">
+    <div class="sec-head"><span class="depth" data-depth></span><h2 id="h-anggota">Anggota kelas</h2><p class="hint" id="count">Tiap murid punya ikannya sendiri.</p></div>
+    <div class="search">
+      <label for="cari">Cari nama</label>
+      <input id="cari" type="search" placeholder="Ketik nama atau jabatan" autocomplete="off">
+    </div>
+    <ul class="members" id="members"></ul>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="weeds" id="weeds" aria-hidden="true"></div>
+  <div class="sand" aria-hidden="true"></div>
+  <div class="inner" style="position:relative;z-index:2">
+    <div class="social">
+      <p class="ttl">Ikuti kami</p>
+      <div class="links">
+        <a href="https://www.instagram.com/class7h_be/"><span class="p">Instagram</span><span class="h">@class7h_be</span></a>
+        <a href="https://www.tiktok.com/@class7h_be3"><span class="p">TikTok</span><span class="h">@class7h_be3</span></a>
+      </div>
+    </div>
+    <div class="note">
+      <p>SMPN 3 Baleendah &middot; Kelas 7H</p>
+      <p>Terakhir diperbarui 18 Oktober 2026</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===== DATA KELAS 7H: ubah di sini ===== */
+var JUMLAH = 45;
+var HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+var PIKET = {
+  Senin: ["Noufal", "Bilal", "Azka", "Rizal", "Muizzu", "Hijrah", "Felia"],
+  Selasa: ["Gibran", "Fadhillah", "Rafa", "Salman", "Anjar", "Sazkia", "Khalifah", "Malikal"],
+  Rabu: ["Alby", "Rivaldo", "Arven", "Julyo", "Fayyadh", "Navisha", "Sabrina"],
+  Kamis: ["Alvio", "Fakhri", "Rizki Ramdani", "Zaki", "Callista", "Bilqiis", "Danesya", "Destya"],
+  Jumat: ["Faizan", "Abdul", "Bisma", "Rafi", "Cindy", "Syaqila", "Ananda"],
+  Sabtu: ["Billy", "Nizwar", "Hazig", "Rizki Ramadan", "Raisya", "Mikayla", "Laura"]
+};
+
+var STRUKTUR = {
+  wali: ["Ibu Fadila Choirunnisa, S.Pd.", "Pa Eki, S.Pd."],
+  ketua: "Salman",
+  wakil: "Nisa",
+  sekretaris: ["Keysa (Nopal)", "Sazkia"],
+  bendahara: ["Raisya", "Felia", "Navisha"],
+  seksi: [
+    { nama: "Keamanan", anggota: ["Bisma", "Alvio", "Izzu", "Dinda"] },
+    { nama: "Kebersihan", anggota: ["Rijal", "Laura", "Hijrah"] },
+    { nama: "Kerohanian", anggota: ["Bilal", "Mikayla", "Bilqis"] },
+    { nama: "Absensi", anggota: ["Syaqila", "Callista"] }
+  ]
+};
+/* ejaan di struktur yang berbeda dari daftar piket */
+var ALIAS = { "Rijal": "Rizal", "Bilqis": "Bilqiis" };
+
+var BAJU = { Senin: "Biru Putih", Selasa: "Olahraga", Rabu: "Kotak-Kotak", Kamis: "Batik", Jumat: "Koko", Sabtu: "Pramuka" };
+
+/* tiap baris: [mulai, selesai, mata pelajaran] */
+var JADWAL = {
+  Senin: [
+    ["12.00", "12.30", "MBG"], ["12.30", "13.30", "B. Sunda"], ["13.30", "14.30", "B. Inggris"],
+    ["14.30", "14.50", "Istirahat"], ["14.50", "16.20", "IPA"]
+  ],
+  Selasa: [
+    ["12.00", "12.20", "MBG"], ["12.20", "13.50", "Olahraga"], ["13.50", "14.20", "IPS"],
+    ["14.20", "14.40", "Istirahat"], ["14.40", "15.10", "IPS"], ["15.10", "16.40", "SBDP"]
+  ],
+  Rabu: [
+    ["12.00", "12.30", "MBG"], ["12.30", "13.00", "PABP"], ["14.00", "14.30", "MTK"],
+    ["14.30", "14.50", "Istirahat"], ["14.50", "15.20", "MTK"], ["15.20", "16.20", "IPA"]
+  ],
+  Kamis: [
+    ["12.00", "12.20", "MBG"], ["12.20", "13.00", "Sekolah Mengaji (BTHQ)"], ["13.00", "14.30", "B. Indonesia"],
+    ["14.30", "14.50", "Istirahat"], ["14.50", "16.20", "PP"]
+  ],
+  Jumat: [
+    ["11.30", "12.40", "MBG & Solat Jum'at"], ["12.40", "13.40", "IPS"], ["13.40", "14.10", "BK"],
+    ["14.10", "14.40", "B. Indonesia"], ["14.40", "15.00", "Istirahat"], ["14.40", "16.00", "B. Indonesia"]
+  ],
+  Sabtu: [
+    ["11.05", "12.05", "B. Inggris"], ["12.05", "13.05", "MTK"], ["13.05", "13.25", "Istirahat"],
+    ["13.25", "13.55", "MTK"], ["13.55", "15.25", "Informatika"]
+  ]
+};
+var BREAKS = ["Istirahat", "MBG", "MBG & Solat Jum'at"];
+var FULL = {
+  "MBG": "Makan Bergizi Gratis", "MBG & Solat Jum'at": "Makan Bergizi Gratis dan salat Jumat",
+  "B. Sunda": "Bahasa Sunda", "B. Inggris": "Bahasa Inggris", "B. Indonesia": "Bahasa Indonesia",
+  "IPA": "Ilmu Pengetahuan Alam", "IPS": "Ilmu Pengetahuan Sosial", "MTK": "Matematika",
+  "SBDP": "Seni Budaya dan Prakarya", "PABP": "Pendidikan Agama dan Budi Pekerti",
+  "PP": "Pendidikan Pancasila", "BK": "Bimbingan Konseling"
+};
+
+/* kehadiran: [kategori, 1 hari, 2 hari, 3 hari, lebih dari 3 hari] */
+var HADIR_HEAD = ["Keterangan", "1 hari", "2 hari", "3 hari", "Lebih dari 3 hari"];
+var HADIR = [
+  ["Sakit", "Surat orang tua", "Surat orang tua", "Surat dokter", "Home visit wali kelas"],
+  ["Izin", "Surat orang tua", "Surat orang tua", "—", "Pemanggilan orang tua atau home visit (surat pernyataan siswa)"],
+  ["Tanpa keterangan", "Pemanggilan anak", "Pemanggilan anak dan surat pernyataan anak", "Pemanggilan orang tua dan SP 2 orang tua (pernyataan anak dan orang tua)", "SP 3 (pernyataan bermaterai)"]
+];
+
+/* kedisiplinan: [judul, [kalimat, ...]] */
+var ATURAN = [
+  ["Seragam", ["Seragam dan atribut lengkap.", "Baju olahraga hanya dipakai saat pelajaran olahraga."]],
+  ["Jam masuk", ["Toleransi terlambat 5 menit.", "Terlambat 3 kali, orang tua dipanggil."]],
+  ["Jam pulang", ["Disesuaikan."]],
+  ["Rambut", ["Pendek, rapi, dan tidak berwarna (ukuran 3-2-1).", "Diingatkan setiap awal bulan, di minggu pertama."]],
+  ["Make up dan aksesoris", ["Tidak memakai make up dan aksesoris berlebih. Tidak membawa sunscreen, parfum, body lotion, skincare lain, maupun make up.", "Razia bersifat situasional dan bisa dilakukan saat pelajaran berlangsung."]],
+  ["Kendaraan bermotor", ["Tidak boleh dipakai. Kendaraan yang dibawa diamankan sekolah dan diambil oleh orang tua.", "Kalau ada pengaduan dari warga, orang tua dipanggil."]],
+  ["HP", ["Tidak boleh dibawa. HP yang dibawa diamankan guru atau wali kelas dan diambil oleh orang tua."]],
+  ["Sekolah mengaji", ["Murid muslim wajib mengikuti.", "Murid non muslim belajar mandiri di perpustakaan."]],
+  ["Sepatu dan kaos kaki", ["Sepatu hitam warrior atau sport.", "Kaos kaki putih di atas mata kaki, atau kaos kaki sekolah."]],
+  ["Salat Jumat dan keputrian", ["Wajib di sekolah sesuai jadwal.", "Murid non muslim belajar mandiri di perpustakaan atau mengikuti pendidikan karakter bersama BK."]],
+  ["Sepeda", ["Membawa kunci gembok dan parkir di belakang, bukan di parkir motor di depan."]],
+  ["Rokok dan vape", ["Tidak merokok atau vape di lingkungan sekolah maupun di luar sekolah, apalagi saat memakai seragam."]],
+  ["Pemeriksaan kerapian", ["Sebelum masuk kelas di jam pelajaran awal, murid berbaris untuk diperiksa: seragam, atribut, sepatu, kaos kaki, kuku, dan rambut."]],
+  ["Bekal", ["Membawa bekal dari rumah, dan atau membawa misting dan tumbler kalau mau jajan di sekolah."]]
+];
+var NILAI = [
+  "Wajib menyelesaikan tugas-tugas dari guru mata pelajaran.",
+  "Wajib memperhatikan kehadiran.",
+  "Berlaku tidak naik kelas dan naik secara bersyarat."
+];
+
+/* ===== IKAN ===== */
+var TPL = [
+  { body: "M92 30 C86 12 62 6 42 12 C30 16 22 24 18 30 C22 36 30 44 42 48 C62 54 86 48 92 30Z", tail: "M21 30 L2 12 C7 22 7 38 2 48Z", dorsal: "M42 12 C48 1 62 1 70 9 C60 9 50 10 42 12Z", vent: "M48 49 C51 58 60 58 65 51 C60 51 54 51 48 49Z", eye: [79, 26], gill: "M68 20 C64 26 64 34 68 40", bands: [36, 48, 60] },
+  { body: "M97 30 C90 21 68 17 46 19 C32 21 22 26 17 30 C22 34 32 39 46 41 C68 43 90 39 97 30Z", tail: "M20 30 L3 17 L9 30 L3 43Z", dorsal: "M42 19 L50 7 C56 8 62 14 66 18 C58 18 50 18 42 19Z", vent: "M52 41 L58 51 L67 42Z", eye: [86, 28], gill: "M74 22 C71 27 71 33 74 38", bands: [34, 48, 62] },
+  { body: "M84 30 C78 14 58 8 42 14 C30 20 25 26 23 30 C25 34 30 40 42 46 C58 52 78 46 84 30Z", tail: "M26 30 L8 19 C12 27 12 33 8 41Z", dorsal: "M40 14 C36 3 48 -2 64 8 C70 11 68 12 62 12 C54 12 46 13 40 14Z", vent: "M42 46 C40 58 54 62 66 50 C58 50 50 48 42 46Z", eye: [72, 26], gill: "M60 18 C56 26 56 34 60 42", bands: [38, 50, 62] }
+];
+/* [badan, sirip, pola] */
+var PAL = [
+  ["#ffa04a", "#ff6b2c", "#fff1d0"], ["#ffd447", "#f2a20c", "#0f6a78"], ["#ff8a80", "#e0505a", "#ffe3d6"],
+  ["#b6e36a", "#5fb36a", "#1f6b4f"], ["#f6ecd9", "#ff9b7a", "#e8683f"], ["#8fd8ff", "#4aa8e0", "#0b4f7a"],
+  ["#e9c98a", "#c9955a", "#7a4b22"]
+];
+var GHOST = ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.1)", "rgba(255,255,255,0.1)"];
+var uidc = 0;
+
+function fish(o) {
+  var T = TPL[o.tpl % 3], P = o.ghost ? GHOST : PAL[o.pal % PAL.length], id = "cp" + (++uidc), pat = "";
+  if (!o.ghost) {
+    if (o.pat === 1) pat = T.bands.map(function (x) { return '<rect x="' + x + '" y="-4" width="5" height="70" fill="' + P[2] + '" opacity="0.85"/>'; }).join("");
+    if (o.pat === 2) pat = [[50, 24], [60, 36], [40, 38], [70, 28], [52, 41]].map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="3" fill="' + P[2] + '" opacity="0.8"/>'; }).join("");
+    if (o.pat === 3) pat = '<rect x="0" y="33" width="100" height="40" fill="' + P[2] + '" opacity="0.55"/>';
+  }
+  var s = '<svg class="fish" viewBox="0 -4 100 68" aria-hidden="true" focusable="false">';
+  s += '<defs><clipPath id="' + id + '"><path d="' + T.body + '"/></clipPath></defs>';
+  s += '<path class="tail" d="' + T.tail + '" fill="' + P[1] + '"' + (o.d ? ' style="animation-delay:-' + o.d + 's"' : '') + '/>';
+  s += '<path d="' + T.dorsal + '" fill="' + P[1] + '"/><path d="' + T.vent + '" fill="' + P[1] + '"/>';
+  s += '<path d="' + T.body + '" fill="' + P[0] + '"/>';
+  if (pat) s += '<g clip-path="url(#' + id + ')">' + pat + '</g>';
+  if (!o.ghost) {
+    s += '<path d="' + T.gill + '" fill="none" stroke="rgba(6,37,60,0.3)" stroke-width="1.6" stroke-linecap="round"/>';
+    s += '<circle cx="' + T.eye[0] + '" cy="' + T.eye[1] + '" r="3.6" fill="#fff"/><circle cx="' + (T.eye[0] + 0.8) + '" cy="' + T.eye[1] + '" r="1.8" fill="#06253c"/>';
+  }
+  return s + '</svg>';
+}
+function hash(s) { var x = 2166136261; for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; }
+
+/* ===== LOGIKA HALAMAN ===== */
+function $(id) { return document.getElementById(id); }
+function toMin(s) { var p = s.split("."); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); }
+
+var now = new Date();
+var dayIdx = now.getDay(); // 0 = Minggu
+var todayName = dayIdx >= 1 && dayIdx <= 6 ? HARI[dayIdx - 1] : null;
+var nowMin = now.getHours() * 60 + now.getMinutes();
+
+$("jumlah").textContent = JUMLAH + " siswa";
+$("lead").textContent = JUMLAH + " murid, satu kolam. Tempat kami melihat jadwal, piket, dan tata tertib kelas.";
+
+// ikan berenang di hero
+var FAR = [
+  { y: 6, w: 48, dur: 70, f: 0.1, x: 12, t: 0 }, { y: 20, w: 66, dur: 96, f: 0.55, x: 60, t: 1 },
+  { y: 38, w: 40, dur: 80, f: 0.8, x: 85, t: 2 }, { y: 52, w: 58, dur: 112, f: 0.35, x: 35, t: 0 },
+  { y: 14, w: 34, dur: 120, f: 0.9, x: 76, t: 1 }
+];
+$("far").innerHTML = FAR.map(function (f) {
+  return '<div class="sw" style="--y:' + f.y + '%;--w:' + f.w + 'px;--dur:' + f.dur + 's;--delay:-' + Math.round(f.dur * f.f) + 's;--x:' + f.x + '%"><div class="bob">' + fish({ tpl: f.t, ghost: true }) + '</div></div>';
+}).join("");
+var NEAR = [
+  { y: 4, w: 150, dur: 34, f: 0.7, x: 70, tpl: 2, pal: 0, pat: 1 }, { y: 88, w: 76, dur: 24, f: 0.2, x: 12, tpl: 0, pal: 3, pat: 1 },
+  { y: 50, w: 104, dur: 28, f: 0.45, x: 38, tpl: 0, pal: 1, pat: 2 }, { y: 24, w: 124, dur: 44, f: 0.05, x: 88, tpl: 1, pal: 5, pat: 3 },
+  { y: 112, w: 64, dur: 20, f: 0.85, x: 55, tpl: 1, pal: 2, pat: 0 }
+];
+$("lane").innerHTML = NEAR.map(function (f) {
+  return '<div class="sw" style="--y:' + f.y + 'px;--w:' + f.w + 'px;--dur:' + f.dur + 's;--delay:-' + Math.round(f.dur * f.f) + 's;--x:' + f.x + '%"><div class="bob">' + fish(f) + '</div></div>';
+}).join("");
+
+// gelembung
+var bh = "";
+for (var b = 0; b < 18; b++) {
+  var sz = 5 + (b * 7) % 16, dur = 16 + (b * 5) % 16;
+  bh += '<span class="bub" style="left:' + ((b * 53 + 7) % 100) + '%;width:' + sz + 'px;height:' + sz + 'px;--dur:' + dur + 's;--delay:-' + ((b * 11) % dur) + 's;--dx:' + ((b % 2 ? 1 : -1) * (14 + (b * 3) % 22)) + 'px"></span>';
+}
+$("bubbles").innerHTML = bh;
+
+// rumput laut
+var greens = ["#3fae7a", "#2f8f6a", "#6bd19a", "#27795c"];
+var wh = "";
+for (var w = 0; w < 16; w++) {
+  var h = 60 + (w * 37) % 70, c = greens[w % greens.length];
+  wh += '<div class="weed" style="left:' + (w * 6.4 + 1) + '%;width:22px;height:' + h + 'px;--dur:' + (2.6 + (w % 4) * 0.7) + 's;--delay:-' + (w % 5) + 's"><svg viewBox="0 0 24 100" preserveAspectRatio="none"><path d="M12 100 C0 78 24 60 12 40 C2 24 18 12 12 0" fill="none" stroke="' + c + '" stroke-width="7" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>';
+}
+$("weeds").innerHTML = wh;
+
+// daftar anggota: dari jadwal piket, lalu pengurus yang belum ada di sana
+function canon(n) { return ALIAS[n] || n; }
+var ANGGOTA = [];
+HARI.forEach(function (d) { PIKET[d].forEach(function (n) { if (ANGGOTA.indexOf(n) < 0) ANGGOTA.push(n); }); });
+var roleOf = {};
+function setRole(n, r) {
+  var k = canon(n);
+  roleOf[k] = r;
+  if (ANGGOTA.indexOf(k) < 0) ANGGOTA.push(k);
+}
+setRole(STRUKTUR.ketua, "Ketua Murid");
+setRole(STRUKTUR.wakil, "Wakil Ketua Murid");
+STRUKTUR.sekretaris.forEach(function (n) { setRole(n, "Sekretaris"); });
+STRUKTUR.bendahara.forEach(function (n) { setRole(n, "Bendahara"); });
+STRUKTUR.seksi.forEach(function (s) { s.anggota.forEach(function (n) { setRole(n, "Seksi " + s.nama); }); });
+
+// kartu "sekarang"
+function nextSchoolDay() { return dayIdx >= 1 && dayIdx <= 5 ? HARI[dayIdx] : HARI[0]; }
+function renderToday() {
+  var label, big, sub;
+  var nx = nextSchoolDay();
+  var nxLabel = dayIdx >= 1 && dayIdx <= 5 ? "Besok" : nx;
+  if (todayName) {
+    var rows = JADWAL[todayName], cur = null, next = null;
+    for (var i = 0; i < rows.length; i++) {
+      if (nowMin >= toMin(rows[i][0]) && nowMin < toMin(rows[i][1])) { cur = rows[i]; }
+      else if (nowMin < toMin(rows[i][0]) && !next) { next = rows[i]; }
+    }
+    if (cur) { label = "Sedang berlangsung"; big = cur[2]; sub = "Sampai " + cur[1] + (FULL[cur[2]] ? " · " + FULL[cur[2]] : ""); }
+    else if (next) { label = todayName + " · Berikutnya"; big = next[2]; sub = "Mulai " + next[0] + (FULL[next[2]] ? " · " + FULL[next[2]] : "") + ". Seragam hari ini: " + BAJU[todayName] + "."; }
+    else { label = todayName; big = "Pelajaran hari ini sudah selesai"; sub = nxLabel + " pakai seragam " + BAJU[nx] + "."; }
+  } else {
+    label = "Hari ini Minggu";
+    big = "Senin dimulai dengan " + JADWAL.Senin[0][2];
+    sub = "Pukul " + JADWAL.Senin[0][0] + ". Senin pakai seragam " + BAJU.Senin + ".";
+  }
+  $("today").innerHTML = '<span class="label">' + label + '</span><span class="big">' + big + '</span><span class="sub">' + sub + '</span>';
+}
+renderToday();
+
+// jadwal + tab
+var selected = todayName || "Senin";
+function renderTabs() {
+  $("tabs").innerHTML = HARI.map(function (h) {
+    return '<button role="tab" id="tab-' + h + '" aria-selected="' + (h === selected) + '" data-day="' + h + '">' + h +
+      (h === todayName ? '<span class="dot" title="Hari ini"></span>' : '') + '</button>';
+  }).join("");
+}
+function renderSched() {
+  $("sched").innerHTML = JADWAL[selected].map(function (r) {
+    var isBreak = BREAKS.indexOf(r[2]) > -1;
+    var isNow = selected === todayName && nowMin >= toMin(r[0]) && nowMin < toMin(r[1]);
+    return '<li class="' + (isBreak ? "break " : "") + (isNow ? "now-row" : "") + '"><span class="time">' + r[0] + ' - ' + r[1] +
+      '</span><span class="mapel">' + (isNow ? '<span class="mini">' + fish({ tpl: 0, pal: 0, pat: 1 }) + '</span>' : '') + r[2] + '</span>' +
+      (FULL[r[2]] ? '<span class="guru">' + FULL[r[2]] + '</span>' : '') + '</li>';
+  }).join("");
+  $("sched").setAttribute("aria-labelledby", "tab-" + selected);
+}
+$("tabs").addEventListener("click", function (e) {
+  var bt = e.target.closest("button[data-day]");
+  if (!bt) return;
+  selected = bt.getAttribute("data-day");
+  renderTabs(); renderSched(); setDepths();
+  $("tab-" + selected).focus();
+});
+renderTabs(); renderSched();
+
+// seragam
+$("uniform").innerHTML = HARI.map(function (h) {
+  return '<div class="' + (h === todayName ? "today-d" : "") + '"><span class="d">' + h + '</span><span class="v">' + BAJU[h] + '</span></div>';
+}).join("");
+
+// struktur
+function node(role, names, cls) {
+  var list = Array.isArray(names) ? names : [names];
+  return '<div class="node ' + (cls || "") + '"><span class="role">' + role + '</span>' +
+    list.map(function (n) { return '<span class="nm">' + n + '</span>'; }).join("") + '</div>';
+}
+$("org").innerHTML =
+  '<div class="row">' + node("Wali Kelas", STRUKTUR.wali, "top") + '</div><div class="link"></div>' +
+  '<div class="row">' + node("Ketua Murid", STRUKTUR.ketua, "lead") + node("Wakil Ketua Murid", STRUKTUR.wakil, "lead") + '</div><div class="link"></div>' +
+  '<div class="row">' + node("Sekretaris", STRUKTUR.sekretaris) + node("Bendahara", STRUKTUR.bendahara) + '</div><div class="link"></div>' +
+  '<div class="seksi-grid">' + STRUKTUR.seksi.map(function (s) { return node("Seksi " + s.nama, s.anggota); }).join("") + '</div>';
+
+// piket
+$("piketGrid").innerHTML = HARI.map(function (h) {
+  return '<section class="' + (h === todayName ? "today-d" : "") + '"><h3>' + h + (h === todayName ? '<small>Hari ini</small>' : '') + '</h3><ul>' +
+    PIKET[h].map(function (n) { return "<li>" + n + "</li>"; }).join("") + '</ul></section>';
+}).join("");
+
+// tata tertib
+$("hadir").innerHTML = '<thead><tr>' + HADIR_HEAD.map(function (t) { return '<th scope="col">' + t + '</th>'; }).join("") + '</tr></thead><tbody>' +
+  HADIR.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + c + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody>';
+$("rules").innerHTML = ATURAN.map(function (a) {
+  return '<div class="rule"><dt>' + a[0] + '</dt><dd>' + a[1].map(function (p) { return '<p>' + p + '</p>'; }).join("") + '</dd></div>';
+}).join("");
+$("pact").innerHTML = NILAI.map(function (k, i) {
+  return '<li><div>' + fish({ tpl: i % 3, pal: (i * 2 + 1) % 7, pat: i % 4, d: (i % 5) * 0.2 }) + '</div><span>' + k + '</span></li>';
+}).join("");
+
+// anggota: tiap nama dapat ikan yang selalu sama
+function renderMembers(q) {
+  q = (q || "").toLowerCase().trim();
+  var list = ANGGOTA.filter(function (n) { return !q || n.toLowerCase().indexOf(q) > -1 || (roleOf[n] || "").toLowerCase().indexOf(q) > -1; });
+  $("count").textContent = q ? list.length + " nama cocok." : "Tiap murid punya ikannya sendiri.";
+  if (!list.length) { $("members").innerHTML = '<li class="kosong">Tidak ada nama yang cocok. Coba kata lain.</li>'; return; }
+  $("members").innerHTML = list.map(function (n) {
+    var hs = hash(n);
+    return '<li><div class="pic">' + fish({ tpl: hs % 3, pal: (hs >>> 3) % 7, pat: (hs >>> 7) % 4, d: (hs % 8) / 10 }) + '</div><span class="nm">' + n + '</span>' +
+      (roleOf[n] ? '<span class="rl">' + roleOf[n] + '</span>' : '') + '</li>';
+  }).join("");
+}
+$("cari").addEventListener("input", function (e) { renderMembers(e.target.value); setDepths(); });
+renderMembers("");
+
+// penggaris kedalaman: 0 m di permukaan, 30 m di dasar halaman
+var MAXD = 30;
+(function () {
+  var r = "";
+  for (var i = 0; i <= 6; i++) r += '<span class="' + (i === 6 ? "last" : "") + '" style="top:' + (i * 100 / 6) + '%">' + (i * 5) + ' m</span>';
+  $("ruler").innerHTML = r;
+})();
+function setDepths() {
+  var H = Math.max(1, document.documentElement.scrollHeight);
+  document.querySelectorAll("[data-depth]").forEach(function (el) {
+    var y = el.getBoundingClientRect().top + window.scrollY;
+    el.textContent = "Kedalaman " + Math.round(Math.min(1, Math.max(0, y / H)) * MAXD) + " m";
+  });
+}
+setDepths();
+window.addEventListener("resize", setDepths);
+window.addEventListener("load", setDepths);
+if (window.ResizeObserver) new ResizeObserver(setDepths).observe(document.body);
+
+// perbarui penanda jam tiap menit
+setInterval(function () {
+  var d = new Date();
+  nowMin = d.getHours() * 60 + d.getMinutes();
+  renderToday(); renderSched();
+}, 60000);
+</script>
+
+</body></html>
